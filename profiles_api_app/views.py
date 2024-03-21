@@ -10,7 +10,15 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from .serializers import HelloSerializer
+
+from .models import UserProfile
+from .serializers import HelloSerializer, UserProfileSerializer
+from .permissions import UpdateOwnProfile
+
+from rest_framework.authentication import TokenAuthentication
+from rest_framework import filters
+
+
 
 
 # CBV --> APIView
@@ -68,7 +76,7 @@ class HelloViewSet(viewsets.ViewSet):
 
     def list(self, request):
         """Return a hello message."""
-        ...
+        return Response(data={"message": "Hello!"})
 
     def create(self, request):
         """Create a new hello message."""
@@ -103,3 +111,19 @@ class HelloViewSet(viewsets.ViewSet):
         """Handle removing an object"""
 
         return Response({'http_method': 'DELETE'})
+
+# ........................................................................ #
+# .......................... Profile API ....................... #
+
+
+class UserProfileViewSet(viewsets.ModelViewSet):
+    """Handle creating, creating and updating profiles"""
+    serializer_class = UserProfileSerializer
+    queryset = UserProfile.objects.all()
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [UpdateOwnProfile]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["name", "email"]
+    
+
+
