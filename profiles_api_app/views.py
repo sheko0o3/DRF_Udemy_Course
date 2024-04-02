@@ -5,21 +5,27 @@ from django.shortcuts import render
 # CBV ViewSets
 from rest_framework import viewsets
 
+
 # CBV APIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 
-from .models import UserProfile
-from .serializers import HelloSerializer, UserProfileSerializer
-from .permissions import UpdateOwnProfile
+from .models import UserProfile, ProfileFeedItem
+from .serializers import HelloSerializer, UserProfileSerializer, ProfileFeedItemSerializer
+from .permissions import UpdateOwnProfile, UpdateOwnStatus
+
 
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import filters
 
 
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.settings import api_settings
 
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.authentication import BasicAuthentication
 
 # CBV --> APIView
 class HelloApiView(APIView):
@@ -124,6 +130,24 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [UpdateOwnProfile]
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "email"]
-    
+
+
+class UserLoginApiView(ObtainAuthToken):
+   """Handle creating user authentication tokens"""
+
+   renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+
+
+class ProfileFeedItemViewSet(viewsets.ModelViewSet):
+    serializer_class = ProfileFeedItemSerializer
+    queryset = ProfileFeedItem.objects.all()
+    authentication_classes = (TokenAuthentication, )
+    permission_classes = (UpdateOwnStatus, IsAuthenticated)
+
+    def perform_create(self, serializer):
+        """Sets the user profile to the logged in user"""
+        serializer.save(user_profile=self.request.user)
+
+
 
 
